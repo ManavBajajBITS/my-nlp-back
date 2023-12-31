@@ -26,17 +26,16 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Load SpaCy model for NER
-nlp_spacy = spacy.load("en_core_web_sm")
-
-# Load Hugging Face model for question answering
-qa_pipeline = pipeline("question-answering", model="bert-large-uncased-whole-word-masking-finetuned-squad")
+# # Load SpaCy model for NER
+# nlp_spacy = spacy.load("en_core_web_sm")
 
 # Load Transformers pipeline for summarization
+# Other models could be used here for better performance, but due to limited computation power I will use T5 here. You may replace it with another model.
 summarizer = pipeline("summarization", model="t5-small")
 
 df = pd.read_csv("text_segments.csv")
 
+#This is just here for testing purposes
 @app.get("/")
 def read_root():
     return {"Hello": "World"}
@@ -55,23 +54,6 @@ class Document(BaseModel):
 #     result = qa_pipeline(question=question, context=doc.content)
 #     return {"answer": result["answer"], "confidence": result["score"]}
 
-
-@app.get("/question-answering/{doc_name}")
-def question_answering(doc_name: str, question: str):
-    try:
-        # Extract text from the specified document
-        text = df.loc[df['doc_name'] == doc_name, 'text'].iloc[0]
-
-        # Use SpaCy for question answering
-        doc = nlp(text)
-        answer = " ".join(token.text for token in doc if token.is_alpha)
-
-        return {"answer": answer}
-
-    except Exception as e:
-        raise HTTPException(
-            status_code=500, detail=f"Error processing question: {str(e)}"
-        )
 
 # # Function to split text into chunks
 # def split_text_into_chunks(text, chunk_size=512, max=None):
@@ -123,20 +105,33 @@ def summarize(doc_name: str):
             status_code=500, detail=f"Error summarizing document: {str(e)}"
         )
 
-@app.get("/topic-identification/{doc_name}")
-def identify_topics(doc_name: str):
-    try:
-        # Extract text from the specified document
-        text = df.loc[df['doc_name'] == doc_name, 'text'].iloc[0]
+# # here we could use SpaCy's named entity recognition, This would be where topic-identification could be added in the future.
+# @app.get("/topic-identification/{doc_name}")
+# def identify_topics(doc_name: str):
+#     try:
+#         # implementation logic to be added here
 
-        # Implement your topic identification logic here
-        # For example, you could use SpaCy's named entity recognition (NER)
-        doc = nlp(text)
-        topics = [ent.text for ent in doc.ents]
+#     except Exception as e:
+#         raise HTTPException(
+#             status_code=500, detail=f"Error identifying topics: {str(e)}"
+#         )
+    
+    
+############## Example for implementation of question answering ##################
+    #not fully implemented
 
-        return {"topics": topics}
+# # Load Hugging Face model for question answering
+# qa_pipeline = pipeline("question-answering", model="bert-large-uncased-whole-word-masking-finetuned-squad")
+       
+# @app.get("/question-answering/{doc_name}")
+# def question_answering(doc_name: str, question: str):
+#     try:
+#         # Extract text from the specified document
+#         result = qa_pipeline(question=question, context=doc.content)
+#         return {"answer": result["answer"], "confidence": result["score"]}
 
-    except Exception as e:
-        raise HTTPException(
-            status_code=500, detail=f"Error identifying topics: {str(e)}"
-        )
+
+#     except Exception as e:
+#         raise HTTPException(
+#             status_code=500, detail=f"Error processing question: {str(e)}"
+#         )
