@@ -1,0 +1,10 @@
+fastapi==0.68.0
+uvicorn==0.15.0
+pandas==2.0.0
+spacy==3.7.2
+#en_core_web_sm==3.7.1
+transformers==4.11.3
+tensorflow==2.13.0
+torch==1.9.0
+protobuf==4.24.2
+sentence-transformers==2.2.2 
