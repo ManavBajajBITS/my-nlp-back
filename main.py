@@ -6,6 +6,10 @@ import pandas as pd
 from transformers import pipeline
 from sentence_transformers import SentenceTransformer
 import logging
+# from nltk.corpus import stopwords
+# from nltk.tokenize import word_tokenize
+import string
+# import nltk
 
 logging.basicConfig(level=logging.INFO)
 
@@ -33,7 +37,30 @@ app.add_middleware(
 # Other models could be used here for better performance, but due to limited computation power I will use T5 here. You may replace it with another model.
 summarizer = pipeline("summarization", model="t5-small")
 
+# Load data and process it to extract data better suited for summarization
 df = pd.read_csv("text_segments.csv")
+
+#nltk.download('stopwords')
+
+#stop_words = set(stopwords.words('english'))
+def preprocess_text(text):
+    # Lowercasing
+    text = text.lower()
+    
+    # Remove punctuation
+    text = text.translate(str.maketrans("", "", string.punctuation))
+    
+    # Tokenization
+    # tokens = word_tokenize(text)
+    
+    # # Remove stopwords
+    # tokens = [token for token in tokens if token not in stop_words]
+    
+    return text
+
+df = df.drop_duplicates(subset=['text'])
+
+df['processed_text'] = df['text'].apply(preprocess_text)
 
 #This is just here for testing purposes
 @app.get("/")
@@ -42,18 +69,6 @@ def read_root():
 
 class Document(BaseModel):
     content: str
-
-# @app.post("/ner")
-# def extract_named_entities(doc: Document):
-#     doc_spacy = nlp_spacy(doc.content)
-#     entities = [{"text": ent.text, "label": ent.label_} for ent in doc_spacy.ents]
-#     return {"entities": entities}
-
-# @app.post("/question-answering")
-# def answer_question(doc: Document, question: str = Query(..., title="Question")):
-#     result = qa_pipeline(question=question, context=doc.content)
-#     return {"answer": result["answer"], "confidence": result["score"]}
-
 
 # # Function to split text into chunks
 # def split_text_into_chunks(text, chunk_size=512, max=None):
